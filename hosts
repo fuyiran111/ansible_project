@@ -1,0 +1,8 @@
+[aws]
+95.40.63.205  
+95.40.10.166 
+
+
+[aws:vars]
+ansible_ssh_private_key_file=~/.ssh/id_rsa 
+ansible_user=ubuntu
