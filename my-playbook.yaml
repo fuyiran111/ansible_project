@@ -1,7 +1,7 @@
 ---
 - name: config ec2 server 
   hosts: aws
-  remote_user: ubuntu
+  : ubuntu
   become: yes
   become_method: sudo 
   tasks: 

@@ -1,0 +1,27 @@
+---
+- name: install npm and nodejs
+  hosts: 95.40.36.149
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: update apt 
+      apt: 
+        update_cache: yes
+        upgrade: full
+    - name: install pkg
+      apt:
+        pkg:
+        - npm
+        - docker.io
+        - nodejs
+- name: upload tar and unarchive tar
+  hosts: 95.40.36.149
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: unarchive tar
+      unarchive:
+        src: /Users/yiran/Documents/Learning/Ansible/ansible-backup.tar.gz
+        dest: /root/
