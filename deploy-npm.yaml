@@ -25,3 +25,13 @@
       unarchive:
         src: /Users/yiran/Documents/Learning/Ansible/ansible-backup.tar.gz
         dest: /root/
+    - name: docker nginx start 
+      ansible.builtin.command: docker run -d -p 80:80 nginx
+      async: 1000
+      poll: 0
+    - name: nginx status check
+      shell: docker ps 
+      register: dir_path
+    - debug: msg={{dir_path}}
+
+
