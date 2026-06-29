@@ -3,7 +3,6 @@
   hosts: 95.40.36.149
   become: yes
   become_user: root
-  become_method: sudo
   tasks:
     - name: update apt 
       apt: 
@@ -15,23 +14,56 @@
         - npm
         - docker.io
         - nodejs
-- name: upload tar and unarchive tar
+
+- name: Create a user
   hosts: 95.40.36.149
   become: yes
   become_user: root
-  become_method: sudo
   tasks:
+    - name: Ensure group "docker" exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+    - name: create user 
+      ansible.builtin.user:
+        name: yiran
+        group: docker
+        shell: /bin/bash
+
+- name: upload tar and unarchive tar
+  hosts: 95.40.36.149
+  become: yes              # 👈 整个 Play 全部直接用 root 身份运行
+  become_user: root
+  tasks:
+    # 1. 创建目录（此时由 root 创建）
+    - name: Ensure backup directory exists
+      ansible.builtin.file:
+        path: /home/yiran/backup
+        state: directory
+
+    # 2. 解压文件（由 root 直接解压到目标目录，绝对不会报普通用户临时文件权限错）
     - name: unarchive tar
       unarchive:
         src: /Users/yiran/Documents/Learning/Ansible/ansible-backup.tar.gz
-        dest: /root/
+        dest: /home/yiran/backup
+
+    # 3. 关键步骤：递归把解压出来的所有文件和目录的所有者，全部改成 yiran
+    - name: Change ownership of backup directory to yiran
+      ansible.builtin.file:
+        path: /home/yiran/backup
+        owner: yiran
+        group: docker
+        recurse: yes       # 👈 recurse: yes 代表递归修改子目录和文件
+
+    # 4. 运行 Docker
     - name: docker nginx start 
       ansible.builtin.command: docker run -d -p 80:80 nginx
       async: 1000
       poll: 0
+
+    # 5. 检查状态
     - name: nginx status check
       shell: docker ps 
-      register: dir_path
-    - debug: msg={{dir_path}}
+      register: docker_log
 
-
+    - debug: msg="{{ docker_log.stdout_lines }}"
