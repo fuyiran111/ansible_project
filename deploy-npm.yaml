@@ -1,6 +1,8 @@
 ---
 - name: install npm and nodejs
-  hosts: 95.40.36.149
+  vars_files:
+    - npmvars
+  hosts: "{{server_ip}}"
   become: yes
   become_user: root
   tasks:
@@ -16,7 +18,9 @@
         - nodejs
 
 - name: Create a user
-  hosts: 95.40.36.149
+  vars_files:
+    - npmvars
+  hosts: "{{server_ip}}"
   become: yes
   become_user: root
   tasks:
@@ -31,26 +35,28 @@
         shell: /bin/bash
 
 - name: upload tar and unarchive tar
-  hosts: 95.40.36.149
+  vars_files:
+    - npmvars
+  hosts: "{{server_ip}}"
   become: yes              # 👈 整个 Play 全部直接用 root 身份运行
   become_user: root
   tasks:
     # 1. 创建目录（此时由 root 创建）
     - name: Ensure backup directory exists
       ansible.builtin.file:
-        path: /home/yiran/backup
+        path: "{{backup_path}}"
         state: directory
 
     # 2. 解压文件（由 root 直接解压到目标目录，绝对不会报普通用户临时文件权限错）
     - name: unarchive tar
       unarchive:
         src: /Users/yiran/Documents/Learning/Ansible/ansible-backup.tar.gz
-        dest: /home/yiran/backup
+        dest: "{{backup_path}}"
 
     # 3. 关键步骤：递归把解压出来的所有文件和目录的所有者，全部改成 yiran
     - name: Change ownership of backup directory to yiran
       ansible.builtin.file:
-        path: /home/yiran/backup
+        path: "{{backup_path}}"
         owner: yiran
         group: docker
         recurse: yes       # 👈 recurse: yes 代表递归修改子目录和文件
