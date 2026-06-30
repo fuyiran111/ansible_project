@@ -2,36 +2,91 @@
 - name: deploy nexus 
   vars_files: 
     - nexus_variables.yaml
-  hosts: "{{server_ip}}"
+  hosts: server_ip
   become: yes
   become_user: root
   tasks: 
+    - name: check the path folder
+      stat:
+        path: /opt/nexus 
+      register: path_folder
     - name: apt update and install dependance 
       apt: 
         update_cache: true
         pkg: 
         - openjdk-8-jre-headless
         - net-tools
+      when: path_folder.stat.exists == false
     - name: download nexus package
       get_url: 
         url: "{{nexus_package_url}}"
         dest: /opt/
       register: nexus_package_info
+      when: path_folder.stat.exists == false
     - name: unpack the extract file
       unarchive:
         src: "{{nexus_package_info.dest}}"
         dest: /opt/
         remote_src: yes
+      when: path_folder.stat.exists == false
     - name: find the unpackage name diretory
       find: 
         path: /opt/
         file_type: directory
         patterns: 'nexus*'
       register: nexus_package_name
-    - name: check the path folder
-      stat:
-        path: /opt/nexus 
-      register: path_folder
+      when: path_folder.stat.exists == false
     - name: rename the directory
       shell: mv {{nexus_package_name.files[0].path}} /opt/nexus
       when: path_folder.stat.exists == false
+
+
+- name: config user and ownship and nexus config
+  hosts: server_ip
+  become: yes
+  become_user: root
+  tasks: 
+    - name: create a  group 
+      group: 
+        name: nexus
+        state: present
+    - name: create user
+      user:
+        name: nexus
+        group: nexus
+    - name: change folder owner
+      file:
+        path: /opt/nexus
+        owner: nexus
+        group: nexus
+        recurse: true
+    - name: change folder owner
+      file:
+        path: /opt/sonatype-work
+        owner: nexus
+        group: nexus
+        recurse: true
+    - name: config nexus file
+      lineinfile:
+        path: /opt/nexus/bin/nexus
+        regexp: '^run_as_user*'
+        line: run_as_user='nexus'
+
+- name: start nexus
+  hosts: server_ip
+  become: yes
+  become_user: root
+  tasks: 
+    - name: start service
+      command: /opt/nexus/bin/nexus start
+    - name: service boot check
+      shell: ps aux | grep nexus
+      register: ps_check
+    - debug: msg={{ps_check.stdout_lines}}
+    - name: wait for service up
+      pause: 
+        minutes: 1
+    - name: port check
+      shell: netstat -lnpt
+      register: port_check
+    - debug: msg={{port_check.stdout_lines}}

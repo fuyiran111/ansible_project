@@ -1,1 +1,2 @@
-18.167.19.198 ansible_ssh_private_key_file=~/.ssh/id_ras ansible_user=ubuntu ansible_python_interpreter=/usr/bin/python3
+[server_ip]
+18.166.75.93 ansible_ssh_private_key_file=~/.ssh/id_ras ansible_user=ubuntu ansible_python_interpreter=/usr/bin/python3
