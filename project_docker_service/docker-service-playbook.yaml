@@ -1,1 +1,11 @@
 ---
+- name: update apt and install docker, docker-compose
+  hosts: aws
+  become: yes
+  tasks: 
+    - name: update apt and install dependencies
+      apt:
+        update_cache: yes
+        pkg:
+          - docker.io
+          - docker-compose
