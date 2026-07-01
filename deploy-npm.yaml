@@ -71,5 +71,5 @@
     - name: nginx status check
       shell: docker ps 
       register: docker_log
-
     - debug: msg="{{ docker_log.stdout_lines }}"
+    
