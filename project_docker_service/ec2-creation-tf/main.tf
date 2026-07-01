@@ -10,28 +10,28 @@ terraform {
 provider "aws" {
   region = "ap-east-1"
 }
-variable vpc_cidr {
+variable "vpc_cidr" {
+  type    = string
   default = "10.0.0.0/16"
 }
-variable public_subnets {
+
+variable "public_subnets" {
+  type    = list(string)
   default = ["10.0.1.0/24"]
 }
-variable availability_zone_HK {
+
+variable "availability_zone_HK" {
+  type    = list(string)
   default = ["ap-east-1a"]
 } 
-variable "private_subnets" {
-  default = ["10.0.11.0/24"]
-}
-variable env_prefix {
-  default = "ansible"
-}
-variable public_key {
-  default = "/Users/yiran/.ssh/id_rsa.pub"
-}
-variable image_name {
+
+variable "image_name" {
+  type    = string
   default = "ami-0e91a3e208f2ff02e"
 }
-variable image_type {
+
+variable "image_type" {
+  type    = string
   default = "t3.micro"
 }
 # ========== 香港 VPC ==========
@@ -43,12 +43,38 @@ module "vpc_hk" {
 
   azs             = var.availability_zone_HK
   public_subnets  = var.public_subnets
-  private_subnets = var.private_subnets
-
-  enable_nat_gateway = true
-  enable_vpn_gateway = true
   map_public_ip_on_launch = true
 }
+locals {
+  ports = [22, 80, 8080]
+}
+resource "aws_security_group" "ansible_sg" {
+  name   = "ansible_sg"
+  vpc_id = module.vpc_hk.vpc_id
+
+  dynamic "ingress"{
+    for_each = local.ports
+    content {
+      from_port   = ingress.value  
+      to_port     = ingress.value
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+  ingress {
+    from_port   = -1            # -1 代表所有 ICMP 类型
+    to_port     = -1            # -1 代表所有 ICMP 代码
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 # ========== 香港 EC2 ==========
 module "ec2_instance_hk" {
   source  = "terraform-aws-modules/ec2-instance/aws"
@@ -57,12 +83,13 @@ module "ec2_instance_hk" {
   name = "instance-${count.index}"
   ami = var.image_name
   instance_type = var.image_type
-  key_name      = "id-rsa"
+  key_name      = "rsa"
   monitoring    = true
   subnet_id = element(module.vpc_hk.public_subnets, count.index)
-  associate_public_ip_address = true
+  vpc_security_group_ids = [aws_security_group.ansible_sg.id]
 }
 
 output "instance_public_ip_hk" {
   value = module.ec2_instance_hk[*].public_ip
 }
+

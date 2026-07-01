@@ -1,11 +1,94 @@
 ---
-- name: update apt and install docker, docker-compose
+- name: install docker, docker-compose
+  hosts: aws
+  become: yes
+  vars_files:
+    - variables.yaml
+  tasks: 
+    - name: install docker
+      ansible.builtin.package:
+        name: docker
+        state: present
+    - name: test docker
+      command: docker --version
+      register: docker_version
+    - debug: msg="{{ docker_version.stdout }}"
+    - name: start docker service
+      ansible.builtin.systemd_service:
+        name: docker 
+        state: started
+    - name: check the directory of docker-compose
+      ansible.builtin.stat:
+        path: /usr/local/lib/docker/cli-plugins/docker-compose
+      register: compose_file
+    - debug: msg="{{ compose_file.stat.exists }}"
+    - name: 确保 Docker 插件目录存在
+      ansible.builtin.file:
+        path: /usr/local/lib/docker/cli-plugins
+        state: directory
+        mode: '0755'
+    - name: install docker compose
+      ansible.builtin.get_url:
+        url: "{{COMPOSE_URL}}"
+        dest: /usr/local/lib/docker/cli-plugins/docker-compose
+        mode: '0755'
+      when: compose_file.stat.exists == false
+    - name: test docker-compose
+      command: docker compose version
+      register: docker_compose_version
+    - debug: msg="{{ docker_compose_version.stdout }}"
+
+
+- name: create user and add to docker group 
   hosts: aws
   become: yes
   tasks: 
-    - name: update apt and install dependencies
-      apt:
-        update_cache: yes
-        pkg:
-          - docker.io
-          - docker-compose
+    - name: create user
+      ansible.builtin.user: 
+        name: yiran
+        groups: adm, docker
+        shell: /bin/bash
+
+- name: copy docker compose file to ec2
+  hosts: aws
+  become: yes
+  become_user: yiran
+  tasks: 
+    - name: copy compose file
+      ansible.builtin.copy: 
+        src: docker-compose.yaml
+        dest: /home/yiran/docker-compose.yaml
+
+- name: docker login and run compose
+  hosts: aws 
+  become: yes
+  become_user: yiran
+  vars_files:
+    - variables.yaml
+  tasks:
+    - name: docker login
+      community.docker.docker_login:
+        username: "fuyiran111"
+        password: "{{DOCKER_PASSWORD}}"
+      register: docker_login_result
+    - debug:
+        msg: "Docker login result: {{ docker_login_result.login_result }}"
+    - name: run docker compose
+      community.docker.docker_compose_v2:
+        project_src: /home/yiran
+        state: present
+      register: docker_compose_result
+    - debug:  
+        msg: "Docker compose result: {{ docker_compose_result.actions.status }}"
+    
+
+- name: check docker containers
+  hosts: aws
+  become: yes
+  become_user: yiran
+  tasks:
+    - name: check docker containers
+      command: docker ps
+      register: docker_ps_result
+    - debug:
+        msg: "Docker ps result: {{ docker_ps_result.stdout_lines }}"
