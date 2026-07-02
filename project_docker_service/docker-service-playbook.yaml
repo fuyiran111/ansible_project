@@ -1,14 +1,16 @@
 ---
 - name: check ansible availability
   hosts: all
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - name: check ansible availability
       wait_for:
+        delay: 10
         port: 22
-        timeout: 100
+        timeout: 120
         host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
         search_regex: OpenSSH
-      delegate_to: localhost
 
 - name: install docker, docker-compose
   hosts: all
@@ -90,8 +92,7 @@
         state: present
       register: docker_compose_result
     - debug:  
-        msg: "Docker compose result: {{ docker_compose_result.actions.status }}"
-    
+        msg: "Docker compose result: {{ docker_compose_result.actions }}"
 
 - name: check docker containers
   hosts: all
