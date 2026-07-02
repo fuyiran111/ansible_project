@@ -88,6 +88,16 @@ module "ec2_instance_hk" {
   subnet_id = element(module.vpc_hk.public_subnets, count.index)
   vpc_security_group_ids = [aws_security_group.ansible_sg.id]
 }
+## 在 tf中， 执行 Ansible Playbook
+resource "null_resource" "ssh_operation" {
+  triggers = {
+    trigger = join(",", module.ec2_instance_hk[*].public_ip)
+  }
+  provisioner "local-exec" {
+    working_dir = "/Users/yiran/Documents/Learning/Ansible/project_docker_service"
+    command = "ansible-playbook -i ${join(",", module.ec2_instance_hk[*].public_ip)} -u ec2-user --private-key /Users/yiran/.ssh/id_rsa docker-service-playbook.yaml"
+  }
+}
 
 output "instance_public_ip_hk" {
   value = module.ec2_instance_hk[*].public_ip

@@ -1,6 +1,17 @@
 ---
+- name: check ansible availability
+  hosts: all
+  tasks:
+    - name: check ansible availability
+      wait_for:
+        port: 22
+        timeout: 100
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+        search_regex: OpenSSH
+      delegate_to: localhost
+
 - name: install docker, docker-compose
-  hosts: aws
+  hosts: all
   become: yes
   vars_files:
     - variables.yaml
@@ -40,7 +51,7 @@
 
 
 - name: create user and add to docker group 
-  hosts: aws
+  hosts: all
   become: yes
   tasks: 
     - name: create user
@@ -50,7 +61,7 @@
         shell: /bin/bash
 
 - name: copy docker compose file to ec2
-  hosts: aws
+  hosts: all
   become: yes
   become_user: yiran
   tasks: 
@@ -60,7 +71,7 @@
         dest: /home/yiran/docker-compose.yaml
 
 - name: docker login and run compose
-  hosts: aws 
+  hosts: all 
   become: yes
   become_user: yiran
   vars_files:
@@ -83,7 +94,7 @@
     
 
 - name: check docker containers
-  hosts: aws
+  hosts: all
   become: yes
   become_user: yiran
   tasks:
