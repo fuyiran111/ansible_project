@@ -15,6 +15,6 @@
     - name: Create a Deployment by reading the definition from a local file
       kubernetes.core.k8s:
         state: present
-        src: /testing/deployment.yml
+        src: /Users/yiran/Documents/Learning/Ansible/project_k8s_service/k8s_nginx_deployment
         namespace: ansible-namespace
         kubeconfig: ~/.kube/config
