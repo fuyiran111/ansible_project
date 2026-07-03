@@ -1,0 +1,55 @@
+---
+- name: install docker
+  hosts: ec2_jenkins
+  become: yes
+  vars_files:
+    - ./ansible/variables.yaml
+  tasks: 
+    - name: install docker
+      ansible.builtin.package:
+        name: docker
+        state: present
+    - name: test docker
+      command: docker --version
+      register: docker_version
+    - debug: msg="{{ docker_version.stdout }}"
+    - name: start docker service
+      ansible.builtin.systemd_service:
+        name: docker 
+        state: started
+
+- name: install jenkins
+  hosts: ec2_jenkins
+  become: yes
+  tasks:
+    - name: Create jenkins
+      community.docker.docker_container:
+        name: jenkins
+        image: jenkins/jenkins:lts
+        state: started
+        ports:
+          - "8080:8080"
+          - "50000:50000"
+        volumes:
+          - jenkins_home:/var/jenkins_home
+
+- name: check jenkins status
+  hosts: ec2_jenkins
+  become: yes
+  tasks:
+    - name: wait for jenkins to be ready
+      ansible.builtin.wait_for:
+        port: 8080
+        delay: 10
+        timeout: 60
+    - name: check jenkins status
+      shell: docker ps -a | grep jenkins
+      register: jenkins_status
+    - debug: msg="{{ jenkins_status.stdout }}"
+    - name: output jenkins url and initial admin password
+      shell: |
+        echo "Jenkins URL: http://{{ ansible_host }}:8080"
+        echo "Initial Admin Password:"
+        docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+      register: jenkins_info
+    - debug: msg="{{ jenkins_info.stdout_lines }}"
