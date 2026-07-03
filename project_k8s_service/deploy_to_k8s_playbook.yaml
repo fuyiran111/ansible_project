@@ -18,3 +18,6 @@
         src: /Users/yiran/Documents/Learning/Ansible/project_k8s_service/k8s_nginx_deployment
         namespace: ansible-namespace
         kubeconfig: ~/.kube/config
+        # 每段都有 kubeconfig: ~/.kube/config（这是默认位置，别的位置就已经要设置路径）
+        # 可以导入到环境变量 K8S_AUTH_KUBECONFIG=~/.kube/config，然后kubeconfig就可以删了。
+
