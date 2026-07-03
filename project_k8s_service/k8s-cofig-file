@@ -1,0 +1,49 @@
+# k8s配置文件事例：
+# 通常存放在 ~/.kube/config当中
+# 默认情况会读.kube/config 文件，
+# 也可通过 KUBECONFIG 环境变量指定的文件， 如下：
+# export KUBECONFIG=/path/to/kubeconfig_myapp-eks-cluster
+# kubectl get nodes
+
+apiVersion: v1
+kind: Config
+preferences: {}
+
+# 1. 集群列表：定义你要连接的 K8s 集群控制面
+clusters:
+- name: my-eks-cluster
+  cluster:
+    # 替换为你的 EKS API Server Endpoint
+    server: https://E61ECBBD97A76667589327D2584B3989.yl4.ap-east-1.eks.amazonaws.com
+    # 替换为你的集群 Base64 CA 证书数据
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCg==
+
+# 2. 用户凭证列表：定义你登录集群时的身份标识
+users:
+- name: my-aws-user
+  user:
+    # 核心：利用本地 Mac 的 aws-cli 动态生成访问集群的临时安全 Token
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      command: aws
+      args:
+        - "eks"
+        - "get-token"
+        - "--cluster-name"
+        - "my-eks-cluster" # 确保这里与你 AWS 上的集群名字一致
+        - "--region"
+        - "ap-east-1"      # 你的 AWS 区域
+      # env:  # 如果你本地有多个 AWS Profile，可以取消这两行注释来指定
+      #   - name: AWS_PROFILE
+      #     value: "your-profile-name"
+
+# 3. 上下文列表：把“集群”和“用户”绑定在一起，并可指定默认的命名空间
+contexts:
+- name: my-eks-context
+  context:
+    cluster: my-eks-cluster
+    user: my-aws-user
+    namespace: default    # 敲 kubectl 命令时不指定 -n 时，默认落在这个命名空间
+
+# 4. 当前激活的上下文
+current-context: my-eks-context

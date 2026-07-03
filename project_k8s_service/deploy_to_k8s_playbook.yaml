@@ -1,0 +1,20 @@
+---
+- name: create a namespace 
+  hosts: localhost
+  tasks: 
+    - name: create a namespace
+      kubernetes.core.k8s:
+        name: ansible-namespace
+        api_version: v1
+        kind: Namespace
+        state: present
+        kubeconfig: ~/.kube/config
+- name: Create a Deployment by reading the definition from a local file
+  hosts: localhost
+  tasks:
+    - name: Create a Deployment by reading the definition from a local file
+      kubernetes.core.k8s:
+        state: present
+        src: /testing/deployment.yml
+        namespace: ansible-namespace
+        kubeconfig: ~/.kube/config
