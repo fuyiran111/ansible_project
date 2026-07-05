@@ -7,10 +7,7 @@ pipeline{
         stage('ssh service'){
             steps{
                 script{
-                    sshagent (credentials: ['ansible-server']) {
-                        sh 'scp ./ansible/* ec2@${ANSIBLE_SERVER_IP}:/home/ec2-user/ansible/'
-                        
-                    }
+                    
                 }
             }
         }
