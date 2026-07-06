@@ -21,17 +21,17 @@ pipeline{
             steps{
                 script{
                     echo 'checking ansible command ..'
-                }
-                sshagent(credentials: ['ansible-access']) {
-                    def ansibleExists = sh(script: 'command -v ansible-playbook', returnStatus: true) == 0
-                    if (!ansibleExists) {
-                        sh '''
-                            ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "cd /home/ec2-user/ansible && ansible-playbook install-ansible.yaml"
-                        '''
-                        echo 'ansible command installed successfully..'
-                    }
-                    else {
-                        echo 'ansible command already exists..'
+                    sshagent(credentials: ['ansible-access']) {
+                        def ansibleExists = sh(script: 'command -v ansible-playbook', returnStatus: true) == 0
+                        if (!ansibleExists) {
+                            sh '''
+                                ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "cd /home/ec2-user/ansible && ansible-playbook install-ansible.yaml"
+                            '''
+                            echo 'ansible command installed successfully..'
+                        }
+                        else {
+                            echo 'ansible command already exists..'
+                        }
                     }
                 }
             }
