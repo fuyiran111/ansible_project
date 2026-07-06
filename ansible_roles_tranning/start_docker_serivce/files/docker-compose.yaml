@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  myapp:
+    image: fuyiran111/jenkintest:v2.1.2
+    ports:
+      - 80:8088
+  nginx:
+    image: nginx:latest
+    ports:
+      - 8080:80

@@ -1,0 +1,5 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for start_docker_serivce
+DOCKER_PASSWORD: "Fyr19961119"
+COMPOSE_URL: "https://github.com/docker/compose/releases/download/v5.1.2/docker-compose-linux-x86_64"

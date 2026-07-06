@@ -1,0 +1,4 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for create_user
+docker_group: "adm, docker"

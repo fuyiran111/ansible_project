@@ -1,0 +1,35 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for install_docker_and_compose
+- name: install docker
+  ansible.builtin.package:
+    name: docker
+    state: present
+- name: test docker
+  command: docker --version
+  register: docker_version
+- debug: msg="{{ docker_version.stdout }}"
+- name: start docker service
+  ansible.builtin.systemd_service:
+    name: docker 
+    state: started
+- name: check the directory of docker-compose
+  ansible.builtin.stat:
+    path: /usr/local/lib/docker/cli-plugins/docker-compose
+  register: compose_file
+- debug: msg="{{ compose_file.stat.exists }}"
+- name: 确保 Docker 插件目录存在
+  ansible.builtin.file:
+    path: /usr/local/lib/docker/cli-plugins
+    state: directory
+    mode: '0755'
+- name: install docker compose
+  ansible.builtin.get_url:
+    url: "{{COMPOSE_URL}}"
+    dest: /usr/local/lib/docker/cli-plugins/docker-compose
+    mode: '0755'
+  when: compose_file.stat.exists == false
+- name: test docker-compose
+  command: docker compose version
+  register: docker_compose_version
+- debug: msg="{{ docker_compose_version.stdout }}"

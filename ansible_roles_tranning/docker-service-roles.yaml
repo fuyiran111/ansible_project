@@ -1,0 +1,30 @@
+---
+- name: check ansible availability
+  hosts: target_servers
+  roles:
+    - check_ansible_availability
+
+
+- name: install docker, docker-compose
+  hosts: target_servers
+  become: yes
+  vars_files:
+    - variables.yaml
+  roles:
+    - install_docker_and_compose 
+
+
+- name: create user and add to docker group 
+  hosts:  target_servers
+  become: yes
+  roles:
+    - create_user
+
+- name: docker login and run compose
+  hosts:  target_servers 
+  become: yes
+  become_user: yiran
+  vars_files:
+    - variables.yaml
+  roles:
+    - start_docker_serivce

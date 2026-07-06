@@ -1,0 +1,26 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for start_docker_serivce
+- name: copy compose file
+  ansible.builtin.copy: 
+    src: docker-compose.yaml
+    dest: /home/yiran/docker-compose.yaml
+- name: docker login
+  community.docker.docker_login:
+    username: "fuyiran111"
+    password: "{{DOCKER_PASSWORD}}"
+  register: docker_login_result
+- debug:
+    msg: "Docker login result: {{ docker_login_result.login_result }}"
+- name: run docker compose
+  community.docker.docker_compose_v2:
+    project_src: /home/yiran
+    state: present
+  register: docker_compose_result
+- debug:  
+    msg: "Docker compose result: {{ docker_compose_result.actions }}"
+- name: check docker containers
+  command: docker ps
+  register: docker_ps_result
+- debug:
+    msg: "Docker ps result: {{ docker_ps_result.stdout_lines }}"
