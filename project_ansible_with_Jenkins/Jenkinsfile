@@ -1,14 +1,33 @@
 pipeline{ 
     agent any 
     environment{
-        ANSIBLE_SERVER_IP = "54.46.46.221"
+        ANSIBLE_SERVER_IP = "43.199.76.175"
     }
     stages{
         stage('ssh service'){
             steps{
                 script{
-                    
+                    echo 'access ansbile server and copy files..'
                 }
+                sshagent(credentials: ['ansible-access']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "mkdir -p /home/ec2-user/ansible"
+                        scp -o StrictHostKeyChecking=no -r ./ansible/* ec2-user@${ANSIBLE_SERVER_IP}:/home/ec2-user/ansible/
+                    '''
+                }
+            }
+        }
+        stage('ansible playbook'){
+            steps{
+                script{
+                    echo 'run ansible playbook..'
+                }
+                sshagent(credentials: ['ansible-access']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "cd /home/ec2-user/ansible && ansible-playbook docker-service-playbook.yaml"
+                    '''
+                }
+                echo 'ansible playbook executed successfully..'
             }
         }
     }
