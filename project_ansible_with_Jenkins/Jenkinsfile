@@ -22,8 +22,6 @@ pipeline{
                 script{
                     echo 'checking ansible command ..'
                     sshagent(credentials: ['ansible-access']) {
-                        def ansibleExists = sh(script: 'command -v ansible-playbook', returnStatus: true) == 0
-                        if (!ansibleExists) {
                             sh '''
                                 ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "
                                 sudo dnf install -y ansible python3-pip
@@ -32,15 +30,11 @@ pipeline{
                                 ansible-galaxy collection install community.docker --upgrade
                                 "
                             '''
-                            echo 'ansible command installed successfully..'
-                        }
-                        else {
-                            echo 'ansible command already exists..'
+                            echo 'ansible dependencies installed successfully..'
                         }
                     }
                 }
             }
-        }
         stage('ansible playbook'){
             steps{
                 script{
@@ -50,7 +44,6 @@ pipeline{
                     sh '''
                         ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "
                         cd /home/ec2-user/ansible 
-
                         ansible-playbook docker-service-playbook.yaml
                         "
                     '''
