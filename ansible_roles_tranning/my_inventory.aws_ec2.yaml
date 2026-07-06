@@ -4,11 +4,9 @@ regions:
   - ap-east-1
 filters:
   instance-state-name: running
-#   tag:Name:
-#     - jenkins-triggered
 keyed_groups:
   - key: tags.Name
     prefix: ec2
 
 groups:
-  target_servers: tags.Name == 'jenkins-triggered'
+  target_servers: tags.Name == 'abc'
