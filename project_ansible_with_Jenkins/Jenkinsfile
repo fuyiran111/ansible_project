@@ -12,11 +12,11 @@ pipeline{
                 sshagent(credentials: ['ansible-access']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "mkdir -p /home/ec2-user/ansible"
-                        scp -o StrictHostKeyChecking=no -r ~/project_ansible_with_Jenkins/ansible/* ec2-user@${ANSIBLE_SERVER_IP}:/home/ec2-user/ansible/
+                        scp -o StrictHostKeyChecking=no -r /var/jenkins_home/workspace/ansible/project_ansible_with_Jenkins/ansible ec2-user@${ANSIBLE_SERVER_IP}:/home/ec2-user/ansible/
                     '''
                 }
             }
-            
+
         }
         stage('ansible playbook'){
             steps{
