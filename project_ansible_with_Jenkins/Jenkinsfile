@@ -25,7 +25,12 @@ pipeline{
                         def ansibleExists = sh(script: 'command -v ansible-playbook', returnStatus: true) == 0
                         if (!ansibleExists) {
                             sh '''
-                                ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "sudo yum install -y ansible python3-apt "
+                                ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "
+                                sudo dnf install -y ansible python3-pip
+                                pip3 --version
+                                pip3 install --user boto3 botocore
+                                ansible-galaxy collection install community.docker --upgrade
+                                "
                             '''
                             echo 'ansible command installed successfully..'
                         }
@@ -45,8 +50,7 @@ pipeline{
                     sh '''
                         ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "
                         cd /home/ec2-user/ansible 
-                        pip3 install --user boto3 botocore
-                        ansible-galaxy collection install community.docker --upgrade
+
                         ansible-playbook docker-service-playbook.yaml
                         "
                     '''
