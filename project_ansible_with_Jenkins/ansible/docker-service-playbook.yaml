@@ -1,6 +1,6 @@
 ---
 - name: check ansible availability
-  hosts: aws_ec2
+  hosts: target_servers
   tasks:
     - name: check ansible availability
       wait_for:
@@ -11,7 +11,7 @@
         search_regex: OpenSSH
 
 - name: install docker, docker-compose
-  hosts: aws_ec2
+  hosts: target_servers
   become: yes
   vars_files:
     - variables.yaml
@@ -51,7 +51,7 @@
 
 
 - name: create user and add to docker group 
-  hosts:  aws_ec2
+  hosts:  target_servers
   become: yes
   tasks: 
     - name: create user
@@ -61,7 +61,7 @@
         shell: /bin/bash
 
 - name: copy docker compose file to ec2
-  hosts:  aws_ec2
+  hosts:  target_servers
   become: yes
   become_user: yiran
   tasks: 
@@ -71,7 +71,7 @@
         dest: /home/yiran/docker-compose.yaml
 
 - name: docker login and run compose
-  hosts:  aws_ec2 
+  hosts:  target_servers 
   become: yes
   become_user: yiran
   vars_files:
@@ -93,7 +93,7 @@
         msg: "Docker compose result: {{ docker_compose_result.actions }}"
 
 - name: check docker containers
-  hosts:  aws_ec2
+  hosts:  target_servers
   become: yes
   become_user: yiran
   tasks:

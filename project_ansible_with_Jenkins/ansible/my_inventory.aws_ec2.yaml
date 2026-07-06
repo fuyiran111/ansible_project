@@ -9,3 +9,6 @@ filters:
 keyed_groups:
   - key: tags.Name
     prefix: ec2
+
+groups:
+  target_servers: "'ec2_jenkins_triggered' in aws_groups"
