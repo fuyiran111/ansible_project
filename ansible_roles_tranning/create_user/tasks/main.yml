@@ -4,5 +4,5 @@
 - name: create user
   ansible.builtin.user: 
     name: yiran
-    groups: {{ docker_group }}
+    groups: "{{ docker_group }}"
     shell: /bin/bash
