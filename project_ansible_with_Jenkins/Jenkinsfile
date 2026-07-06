@@ -25,7 +25,7 @@ pipeline{
                         def ansibleExists = sh(script: 'command -v ansible-playbook', returnStatus: true) == 0
                         if (!ansibleExists) {
                             sh '''
-                                ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "cd /home/ec2-user/ansible && ansible-playbook install-ansible.yaml"
+                                ssh -o StrictHostKeyChecking=no ec2-user@${ANSIBLE_SERVER_IP} "sudo yum install -y ansible"
                             '''
                             echo 'ansible command installed successfully..'
                         }
